@@ -39,6 +39,7 @@ export default function HomePage() {
       setUserId(id);
       fetchUserInfo(id);
       fetchAllRecipes();
+      fetchFollowingRecipes(id);  // Add this line
       fetchFollowerCount(id);
     }
   }, [searchParams]);
@@ -151,7 +152,11 @@ export default function HomePage() {
 
   const handleTabChange = (tab) => {
     setActiveTab(tab);
-    setFilteredRecipes(tab === "all" ? allRecipes : followingRecipes);
+    if (tab === "all") {
+      setFilteredRecipes(allRecipes);
+    } else {
+      setFilteredRecipes(followingRecipes);
+    }
     setSearchQuery("");
   };
 
