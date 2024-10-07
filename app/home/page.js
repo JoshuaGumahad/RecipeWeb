@@ -13,8 +13,14 @@ import {
   FaPlus,
   FaBars,
   FaSearch,
-  FaUser
+  FaUser,
+  FaStar,
+  FaStarHalfAlt,
+  FaRegStar
 } from "react-icons/fa";
+import AddRecipe from '../../components/AddRecipe';
+import RecipeDetails from '../../components/RecipeDetails';
+import UserProfileModal from '../../components/UserProfileModal';
 
 export default function HomePage() {
   const [userId, setUserId] = useState(null);
@@ -32,6 +38,9 @@ export default function HomePage() {
   const [followingRecipes, setFollowingRecipes] = useState([]);
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
+  const [isAddRecipeModalOpen, setIsAddRecipeModalOpen] = useState(false);
+  const [selectedRecipe, setSelectedRecipe] = useState(null);
+  const [selectedUser, setSelectedUser] = useState(null);
 
   useEffect(() => {
     const id = searchParams.get("userId");
@@ -39,7 +48,7 @@ export default function HomePage() {
       setUserId(id);
       fetchUserInfo(id);
       fetchAllRecipes();
-      fetchFollowingRecipes(id);  // Add this line
+      fetchFollowingRecipes(id);
       fetchFollowerCount(id);
     }
   }, [searchParams]);
@@ -47,7 +56,7 @@ export default function HomePage() {
   const fetchUserInfo = async (id) => {
     try {
       const response = await fetch(
-        `http://localhost/recipeshare-app-1/api/accfuntionality.php?operation=getUserInfo&user_id=${id}`
+        `http://localhost/recipewebv3/api/accfuntionality.php?operation=getUserInfo&user_id=${id}`
       );
       if (response.ok) {
         const data = await response.json();
@@ -55,7 +64,7 @@ export default function HomePage() {
         setUsername(data.username);
         setFullname(data.fullname);
         setProfileImageUrl(data.profile_image);
-        console.log("Profile Image URL:", data.profile_image); // Add this line
+        console.log("Profile Image URL:", data.profile_image);
       } else {
         console.error("Failed to load user info");
       }
@@ -67,7 +76,7 @@ export default function HomePage() {
   const fetchAllRecipes = async () => {
     try {
       const response = await fetch(
-        "http://localhost/recipeshare-app-1/api/accfuntionality.php?operation=getAllRecipes"
+        "http://localhost/recipewebv3/api/accfuntionality.php?operation=getAllRecipes"
       );
       if (response.ok) {
         const data = await response.json();
@@ -84,7 +93,7 @@ export default function HomePage() {
   const fetchFollowingRecipes = async (id) => {
     try {
       const response = await fetch(
-        `http://localhost/recipeshare-app-1/api/accfuntionality.php?operation=getFollowingRecipes&user_id=${id}`
+        `http://localhost/recipewebv3/api/accfuntionality.php?operation=getFollowingRecipes&user_id=${id}`
       );
       if (response.ok) {
         const data = await response.json();
@@ -100,7 +109,7 @@ export default function HomePage() {
   const fetchFollowerCount = async (id) => {
     try {
       const response = await fetch(
-        `http://localhost/recipeshare-app-1/api/accfuntionality.php?operation=getFollowerCount&user_id=${id}`
+        `http://localhost/recipewebv3/api/accfuntionality.php?operation=getFollowerCount&user_id=${id}`
       );
       if (response.ok) {
         const data = await response.json();
@@ -160,47 +169,105 @@ export default function HomePage() {
     setSearchQuery("");
   };
 
-  const RecipeCard = ({ recipe }) => (
-    <div className="bg-white rounded-lg shadow-md overflow-hidden">
-      <div className="relative">
-        <Image
-          src={`http://localhost/recipeshare-app-1/assets/images/${recipe.recipe_image}`}
-          alt={recipe.recipe_name}
-          width={300}
-          height={200}
-          className="w-full h-48 object-cover"
-          priority
-        />
-        <div className="absolute bottom-2 left-2 right-2 flex flex-wrap gap-1">
-          {recipe.mealtype.split(',').map((type, index) => (
-            <span key={index} className="bg-[#FF6B6B] text-white text-xs px-2 py-1 rounded-full">
-              {type.trim()}
+  const handleUserClick = (user) => {
+    setSelectedUser(user);
+  };
+
+  const StarRating = ({ rating }) => {
+    console.log('Raw rating:', rating); // Debug log
+
+    // Ensure rating is a number between 0 and 5
+    const numericRating = Math.min(Math.max(parseFloat(rating) || 0, 0), 5);
+    console.log('Numeric rating:', numericRating); // Debug log
+
+    const stars = [];
+    const fullStars = Math.floor(numericRating);
+    const hasHalfStar = numericRating % 1 >= 0.5;
+
+    for (let i = 1; i <= 5; i++) {
+      if (i <= fullStars) {
+        stars.push(<FaStar key={i} className="text-yellow-400" />);
+      } else if (i === fullStars + 1 && hasHalfStar) {
+        stars.push(<FaStarHalfAlt key={i} className="text-yellow-400" />);
+      } else {
+        stars.push(<FaRegStar key={i} className="text-yellow-400" />);
+      }
+    }
+
+    return (
+      <div className="flex items-center">
+        {stars}
+        <span className="ml-1 text-sm text-gray-600">({numericRating.toFixed(1)})</span>
+      </div>
+    );
+  };
+
+  const RecipeCard = ({ recipe }) => {
+    console.log('Recipe:', recipe); // Debug log
+    console.log('Average rating:', recipe.average_rating); // Debug log
+
+    return (
+      <div 
+        className="bg-white rounded-lg shadow-md overflow-hidden cursor-pointer"
+        onClick={() => setSelectedRecipe(recipe)}
+      >
+        <div className="relative pt-[66.67%]">
+          <Image
+            src={`http://localhost/recipewebv3/assets/images/${recipe.recipe_image}`}
+            alt={recipe.recipe_name}
+            layout="fill"
+            objectFit="cover"
+            className="absolute top-0 left-0 w-full h-full"
+          />
+        </div>
+        <div className="p-4">
+          <h3 className="font-bold text-lg mb-2">{recipe.recipe_name}</h3>
+          <StarRating rating={parseFloat(recipe.average_rating) || 0} />
+          <p className="text-gray-600 text-sm my-2">{recipe.description}</p>
+          <div className="flex items-center mt-2">
+            {recipe.profile_image ? (
+              <Image
+                src={`http://localhost/recipewebv3/assets/${recipe.profile_image}`}
+                alt={recipe.fullname}
+                width={32}
+                height={32}
+                className="rounded-full mr-2"
+              />
+            ) : (
+              <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center mr-2">
+                <FaUser className="text-gray-600" />
+              </div>
+            )}
+            <span 
+              className="text-base font-semibold cursor-pointer hover:underline"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleUserClick({
+                  user_id: recipe.user_id,
+                  username: recipe.username,
+                  fullname: recipe.fullname,
+                  profile_image: recipe.profile_image
+                });
+              }}
+            >
+              {recipe.fullname}
             </span>
-          ))}
+          </div>
         </div>
       </div>
-      <div className="p-4">
-        <h3 className="font-bold text-lg mb-2">{recipe.recipe_name}</h3>
-        <p className="text-gray-600 text-sm mb-4">{recipe.description}</p>
-        <div className="flex items-center">
-          {recipe.profile_image ? (
-            <Image
-              src={`http://localhost/recipeshare-app-1/assets/${recipe.profile_image}`}
-              alt={recipe.fullname}
-              width={32}
-              height={32}
-              className="rounded-full mr-2"
-            />
-          ) : (
-            <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center mr-2">
-              <FaUser className="text-gray-600" />
-            </div>
-          )}
-          <span className="text-base font-semibold">{recipe.fullname}</span>
-        </div>
-      </div>
-    </div>
-  );
+    );
+  };
+
+  const refreshRecipes = async () => {
+    const response = await fetch('http://192.168.0.108/recipeshare-app-1/api/accfuntionality.php?operation=getAllRecipes');
+    const data = await response.json();
+    setAllRecipes(data);
+    setFilteredRecipes(data);
+  };
+
+  const handleRecipeUpdate = () => {
+    fetchAllRecipes();
+  };
 
   return (
     <div className="min-h-screen bg-[#F5F5F5] flex font-sans">
@@ -261,7 +328,7 @@ export default function HomePage() {
               >
                 {profileImageUrl ? (
                   <Image
-                    src={`http://localhost/recipeshare-app-1/assets/${profileImageUrl}`}
+                    src={`http://localhost/recipewebv3/assets/${profileImageUrl}`}
                     alt={fullname || "User"}
                     width={40}
                     height={40}
@@ -323,12 +390,69 @@ export default function HomePage() {
       </div>
 
       {/* Floating Action Button */}
-      <Link
-        href="/add-recipe"
+      <button
+        onClick={() => setIsAddRecipeModalOpen(true)}
         className="fixed bottom-8 right-8 bg-[#FF6B6B] text-white p-4 rounded-full shadow-lg hover:bg-[#FF8C8C] transition-colors duration-300"
       >
         <FaPlus size={24} />
-      </Link>
+      </button>
+
+      {/* Add Recipe Modal */}
+      {isAddRecipeModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-2xl font-bold text-[#FF6B6B]">Add New Recipe</h2>
+              <button
+                onClick={() => setIsAddRecipeModalOpen(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+              </button>
+            </div>
+            <AddRecipe userId={userId} onSuccess={() => {
+              setIsAddRecipeModalOpen(false);
+              refreshRecipes();
+            }} />
+          </div>
+        </div>
+      )}
+
+      {/* Recipe Details Modal */}
+      {selectedRecipe && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-8 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-2xl font-bold text-[#FF6B6B]">{selectedRecipe.recipe_name}</h2>
+              <button
+                onClick={() => setSelectedRecipe(null)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+              </button>
+            </div>
+            <RecipeDetails 
+              recipe={selectedRecipe} 
+              currentUserId={userId}
+              onClose={() => setSelectedRecipe(null)}
+              onUpdate={handleRecipeUpdate}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* User Profile Modal */}
+      {selectedUser && (
+        <UserProfileModal
+          user={selectedUser}
+          currentUserId={userId}
+          onClose={() => setSelectedUser(null)}
+        />
+      )}
     </div>
   );
 }
