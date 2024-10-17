@@ -126,12 +126,9 @@ class User
         try {
             $sql = "SELECT r.*, u.username, u.fullname, u.profile_image,
                     GROUP_CONCAT(cs.steps ORDER BY cs.cookingsteps_id SEPARATOR '||') as steps,
-                    (SELECT rating
+                    (SELECT AVG(rating)
                      FROM ratingtbl rt
-                     WHERE rt.recipe_id = r.recipe_id
-                     GROUP BY rating
-                     ORDER BY COUNT(*) DESC, rating DESC
-                     LIMIT 1) as most_common_rating,
+                     WHERE rt.recipe_id = r.recipe_id) as average_rating,
                     (SELECT COUNT(*)
                      FROM ratingtbl rt
                      WHERE rt.recipe_id = r.recipe_id) as total_ratings
@@ -144,6 +141,11 @@ class User
             $stmt = $conn->prepare($sql);
             $stmt->execute();
             $recipes = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            // Round the average_rating to one decimal place
+            foreach ($recipes as &$recipe) {
+                $recipe['average_rating'] = round($recipe['average_rating'], 1);
+            }
             
             return json_encode($recipes);
         } catch (Exception $e) {
@@ -234,12 +236,9 @@ class User
         try {
             $sql = "SELECT r.*, u.username, u.fullname, u.profile_image,
                     GROUP_CONCAT(cs.steps ORDER BY cs.cookingsteps_id SEPARATOR '||') as steps,
-                    (SELECT rating
+                    (SELECT AVG(rating)
                      FROM ratingtbl rt
-                     WHERE rt.recipe_id = r.recipe_id
-                     GROUP BY rating
-                     ORDER BY COUNT(*) DESC, rating DESC
-                     LIMIT 1) as most_common_rating,
+                     WHERE rt.recipe_id = r.recipe_id) as average_rating,
                     (SELECT COUNT(*)
                      FROM ratingtbl rt
                      WHERE rt.recipe_id = r.recipe_id) as total_ratings
@@ -259,6 +258,11 @@ class User
             $stmt->execute();
 
             $recipes = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            // Round the average_rating to one decimal place
+            foreach ($recipes as &$recipe) {
+                $recipe['average_rating'] = round($recipe['average_rating'], 1);
+            }
             
             return json_encode($recipes);
         } catch (Exception $e) {
@@ -340,6 +344,36 @@ class User
             return json_encode(['success' => false, 'message' => $e->getMessage()]);
         }
     }
+
+    function getRecipeRatings($recipeId, $userId)
+    {
+        include "connection.php";
+
+        try {
+            // Get average rating
+            $avgSql = "SELECT AVG(rating) as avg_rating FROM ratingtbl WHERE recipe_id = :recipe_id";
+            $avgStmt = $conn->prepare($avgSql);
+            $avgStmt->bindParam(':recipe_id', $recipeId);
+            $avgStmt->execute();
+            $avgRating = $avgStmt->fetch(PDO::FETCH_ASSOC)['avg_rating'];
+
+            // Get user's rating
+            $userSql = "SELECT rating FROM ratingtbl WHERE recipe_id = :recipe_id AND user_id = :user_id";
+            $userStmt = $conn->prepare($userSql);
+            $userStmt->bindParam(':recipe_id', $recipeId);
+            $userStmt->bindParam(':user_id', $userId);
+            $userStmt->execute();
+            $userRating = $userStmt->fetch(PDO::FETCH_ASSOC);
+
+            return json_encode([
+                'success' => true,
+                'average_rating' => round($avgRating, 1),
+                'user_rating' => $userRating ? $userRating['rating'] : 0
+            ]);
+        } catch (Exception $e) {
+            return json_encode(['success' => false, 'message' => $e->getMessage()]);
+        }
+    }
 }
 
 $user = new User();
@@ -369,6 +403,9 @@ try {
                 break;
             case "getRatingsAndComments":
                 echo $user->getRatingsAndComments($_GET['recipe_id']);
+                break;
+            case "getRecipeRatings":
+                echo $user->getRecipeRatings($_GET['recipe_id'], $_GET['user_id']);
                 break;
             default:
                 echo json_encode(["error" => "Invalid operation"]);

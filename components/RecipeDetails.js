@@ -24,14 +24,14 @@ const StarRating = ({ rating, onRatingChange = null }) => {
 
 const RecipeDetails = ({ recipe, currentUserId, onClose, onUpdate }) => {
   const [userRating, setUserRating] = useState(0);
-  const [averageRating, setAverageRating] = useState(parseFloat(recipe.most_common_rating) || 0);
+  const [averageRating, setAverageRating] = useState(0);
   const [comment, setComment] = useState('');
   const [comments, setComments] = useState([]);
 
   useEffect(() => {
     fetchComments();
-    checkUserRating();
-  }, []);
+    fetchRatings();
+  }, [recipe.recipe_id]);
 
   const fetchComments = async () => {
     try {
@@ -40,22 +40,26 @@ const RecipeDetails = ({ recipe, currentUserId, onClose, onUpdate }) => {
         const data = await response.json();
         if (data.success && Array.isArray(data.ratings)) {
           setComments(data.ratings);
-        } else {
-          setComments([]);
         }
-      } else {
-        console.error('Failed to load comments');
-        setComments([]);
       }
     } catch (error) {
       console.error('Error fetching comments:', error);
-      setComments([]);
     }
   };
 
-  const checkUserRating = async () => {
-    const userRating = comments.find(comment => comment.user_id === currentUserId)?.rating;
-    setUserRating(userRating ? parseFloat(userRating) : 0);
+  const fetchRatings = async () => {
+    try {
+      const response = await fetch(`http://localhost/recipewebv3/api/accfuntionality.php?operation=getRecipeRatings&recipe_id=${recipe.recipe_id}&user_id=${currentUserId}`);
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          setAverageRating(parseFloat(data.average_rating) || 0);
+          setUserRating(parseFloat(data.user_rating) || 0);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching ratings:', error);
+    }
   };
 
   const handleRating = async (rating) => {
@@ -82,11 +86,9 @@ const RecipeDetails = ({ recipe, currentUserId, onClose, onUpdate }) => {
           fetchComments(); // Refresh comments and ratings
           onUpdate(); // Trigger update in parent component
         }
-      } else {
-        console.error('Failed to rate recipe');
       }
     } catch (error) {
-      console.error('Error rating recipe:', error);
+      console.error('Error submitting rating:', error);
     }
   };
 
@@ -112,12 +114,12 @@ const RecipeDetails = ({ recipe, currentUserId, onClose, onUpdate }) => {
         if (data.success) {
           setComment('');
           fetchComments(); // Refresh comments
+          fetchRatings(); // Refresh ratings
+          onUpdate(); // Trigger update in parent component
         }
-      } else {
-        console.error('Failed to add comment');
       }
     } catch (error) {
-      console.error('Error adding comment:', error);
+      console.error('Error submitting comment:', error);
     }
   };
 
@@ -196,23 +198,19 @@ const RecipeDetails = ({ recipe, currentUserId, onClose, onUpdate }) => {
           <textarea
             value={comment}
             onChange={(e) => setComment(e.target.value)}
-            className="w-full p-2 border rounded"
-            placeholder="Add a comment..."
+            className="w-full p-2 bg-white rounded text-black"
             rows="3"
-            required
-          />
+            placeholder="Add a comment..."
+          ></textarea>
           <button type="submit" className="mt-2 bg-[#FF6B6B] text-white px-4 py-2 rounded">
             Post Comment
           </button>
         </form>
         <div className="space-y-4">
           {comments.map((comment, index) => (
-            <div key={index} className="bg-gray-100 p-4 rounded">
-              <div className="flex items-center mb-2">
-                <FaUser className="mr-2" />
-                <span className="font-semibold">{comment.username}</span>
-              </div>
-              <p>{comment.comment}</p>
+            <div key={index} className="mb-2 p-2 bg-white rounded">
+              <p className="font-semibold text-black">{comment.username}</p>
+              <p className="text-black">{comment.comment}</p>
               <div className="mt-2">
                 <StarRating rating={parseFloat(comment.rating)} />
               </div>
