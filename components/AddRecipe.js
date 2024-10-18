@@ -3,7 +3,7 @@ import axios from 'axios';
 import Image from 'next/image';
 import { FaCamera } from 'react-icons/fa';
 
-const AddRecipe = ({ userId, onSuccess }) => {
+const AddRecipe = ({ userId, onSuccess, onCancel }) => {
   const [recipeName, setRecipeName] = useState('');
   const [ingredients, setIngredients] = useState('');
   const [cookingTime, setCookingTime] = useState('');
@@ -80,102 +80,110 @@ const AddRecipe = ({ userId, onSuccess }) => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="flex justify-center">
-        <div className="relative w-32 h-32 rounded-full overflow-hidden bg-gray-200">
-          {previewUrl ? (
-            <Image src={previewUrl} alt="Recipe preview" layout="fill" objectFit="cover" />
-          ) : (
-            <div className="flex items-center justify-center h-full">
-              <FaCamera size={24} className="text-gray-400" />
+    <div >
+
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="flex justify-center">
+          <div className="relative w-32 h-32 rounded-full overflow-hidden bg-gray-700">
+            {previewUrl ? (
+              <Image src={previewUrl} alt="Recipe preview" layout="fill" objectFit="cover" />
+            ) : (
+              <div className="flex items-center justify-center h-full">
+                <FaCamera size={24} className="text-gray-400" />
+              </div>
+            )}
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleImageChange}
+              accept="image/*"
+              className="hidden"
+            />
+            <button
+              type="button"
+              onClick={() => fileInputRef.current.click()}
+              className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center text-white opacity-0 hover:opacity-100 transition-opacity duration-200"
+            >
+              Change Photo
+            </button>
+          </div>
+        </div>
+        <input
+          type="text"
+          placeholder="Recipe Name"
+          value={recipeName}
+          onChange={(e) => setRecipeName(e.target.value)}
+          className="w-full p-2 border rounded bg-gray-800 text-white"
+          required
+        />
+        <textarea
+          placeholder="Ingredients"
+          value={ingredients}
+          onChange={(e) => setIngredients(e.target.value)}
+          className="w-full p-2 border rounded bg-gray-800 text-white"
+          rows="3"
+          required
+        ></textarea>
+        <input
+          type="text"
+          placeholder="Cooking Time"
+          value={cookingTime}
+          onChange={(e) => setCookingTime(e.target.value)}
+          className="w-full p-2 border rounded bg-gray-800 text-white"
+          required
+        />
+        <textarea
+          placeholder="Description"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          className="w-full p-2 border rounded bg-gray-800 text-white"
+          rows="3"
+          required
+        ></textarea>
+        <div>
+          <h3 className="font-bold mb-2">Meal Type</h3>
+          <div className="grid grid-cols-2 gap-2">
+            {Object.keys(mealTypes).map((type) => (
+              <label key={type} className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  checked={mealTypes[type]}
+                  onChange={() => handleMealTypeChange(type)}
+                  className="form-checkbox text-[#FF6B6B]"
+                />
+                <span>{type.charAt(0).toUpperCase() + type.slice(1)}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+        <div>
+          <h3 className="font-bold mb-2">Steps</h3>
+          {steps.map((step, index) => (
+            <div key={index} className="mb-2">
+              <input
+                type="text"
+                placeholder={`Step ${index + 1}`}
+                value={step}
+                onChange={(e) => handleStepChange(index, e.target.value)}
+                className="w-full p-2 border rounded bg-gray-800 text-white"
+                required
+              />
             </div>
-          )}
-          <input
-            type="file"
-            ref={fileInputRef}
-            onChange={handleImageChange}
-            accept="image/*"
-            className="hidden"
-          />
-          <button
-            type="button"
-            onClick={() => fileInputRef.current.click()}
-            className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center text-white opacity-0 hover:opacity-100 transition-opacity duration-200"
-          >
-            Change Photo
+          ))}
+          <button type="button" onClick={addStep} className="text-[#FF6B6B]">
+            + Add Step
           </button>
         </div>
-      </div>
-      <input
-        type="text"
-        placeholder="Recipe Name"
-        value={recipeName}
-        onChange={(e) => setRecipeName(e.target.value)}
-        className="w-full p-2 border rounded bg-white text-gray-800"
-        required
-      />
-      <textarea
-        placeholder="Ingredients"
-        value={ingredients}
-        onChange={(e) => setIngredients(e.target.value)}
-        className="w-full p-2 border rounded bg-white text-gray-800"
-        rows="3"
-        required
-      ></textarea>
-      <input
-        type="text"
-        placeholder="Cooking Time"
-        value={cookingTime}
-        onChange={(e) => setCookingTime(e.target.value)}
-        className="w-full p-2 border rounded bg-white text-gray-800"
-        required
-      />
-      <textarea
-        placeholder="Description"
-        value={description}
-        onChange={(e) => setDescription(e.target.value)}
-        className="w-full p-2 border rounded bg-white text-gray-800"
-        rows="3"
-        required
-      ></textarea>
-      <div>
-        <h3 className="font-bold mb-2 text-gray-800">Meal Type</h3>
-        <div className="grid grid-cols-2 gap-2">
-          {Object.keys(mealTypes).map((type) => (
-            <label key={type} className="flex items-center space-x-2 text-gray-800">
-              <input
-                type="checkbox"
-                checked={mealTypes[type]}
-                onChange={() => handleMealTypeChange(type)}
-                className="form-checkbox text-[#FF6B6B]"
-              />
-              <span>{type.charAt(0).toUpperCase() + type.slice(1)}</span>
-            </label>
-          ))}
+        <div className="flex space-x-2">
+          <button type="submit" className="flex-1 bg-[#FF6B6B] text-white p-2 rounded hover:bg-[#FF8C8C] transition-colors duration-300">
+            Save Recipe
+          </button>
+          <button type="button" onClick={onCancel} className="flex-1 bg-gray-600 text-white p-2 rounded hover:bg-gray-700 transition-colors duration-300">
+            Cancel
+          </button>
         </div>
-      </div>
-      <div>
-        <h3 className="font-bold mb-2 text-gray-800">Steps</h3>
-        {steps.map((step, index) => (
-          <div key={index} className="mb-2">
-            <input
-              type="text"
-              placeholder={`Step ${index + 1}`}
-              value={step}
-              onChange={(e) => handleStepChange(index, e.target.value)}
-              className="w-full p-2 border rounded bg-white text-gray-800"
-              required
-            />
-          </div>
-        ))}
-        <button type="button" onClick={addStep} className="text-[#FF6B6B]">
-          + Add Step
-        </button>
-      </div>
-      <button type="submit" className="w-full bg-[#FF6B6B] text-white p-2 rounded hover:bg-[#FF8C8C] transition-colors duration-300">
-        Save Recipe
-      </button>
-    </form>
+      </form>
+    </div>
   );
 };
 

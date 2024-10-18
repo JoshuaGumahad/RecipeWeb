@@ -10,14 +10,38 @@ export default function RegisterDialog({ isOpen, onClose, setMsg }) {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [profileImage, setProfileImage] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [errors, setErrors] = useState({});
   const fileInputRef = useRef(null);
+
+  const validateForm = async () => {
+    const newErrors = {};
+    if (!fullName.trim()) newErrors.fullName = "Full name is required";
+    if (!username.trim()) newErrors.username = "Username is required";
+    if (!password) newErrors.password = "Password is required";
+    if (password !== confirmPassword) newErrors.confirmPassword = "Passwords don't match";
+    
+    // Check for username duplication
+    if (username.trim()) {
+      try {
+        const response = await axios.get(`http://localhost/recipewebv3/api/aut.php?operation=checkUsername&username=${username}`);
+        if (response.data.exists) {
+          newErrors.username = "Username already exists";
+        }
+      } catch (error) {
+        console.error('Error checking username:', error);
+        newErrors.username = "Error checking username availability";
+      }
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
 
-    if (password !== confirmPassword) {
-      setMsg("Passwords don't match");
+    if (!(await validateForm())) {
       setIsLoading(false);
       return;
     }
@@ -99,9 +123,10 @@ export default function RegisterDialog({ isOpen, onClose, setMsg }) {
               placeholder="Full Name"
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
-              className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 sm:text-sm"
+              className={`block w-full pl-10 pr-3 py-2 border ${errors.fullName ? 'border-red-500' : 'border-gray-300'} rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 sm:text-sm`}
               required
             />
+            {errors.fullName && <p className="mt-1 text-xs text-red-500">{errors.fullName}</p>}
           </div>
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -112,9 +137,10 @@ export default function RegisterDialog({ isOpen, onClose, setMsg }) {
               placeholder="Username"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 sm:text-sm"
+              className={`block w-full pl-10 pr-3 py-2 border ${errors.username ? 'border-red-500' : 'border-gray-300'} rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 sm:text-sm`}
               required
             />
+            {errors.username && <p className="mt-1 text-xs text-red-500">{errors.username}</p>}
           </div>
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -125,9 +151,10 @@ export default function RegisterDialog({ isOpen, onClose, setMsg }) {
               placeholder="Password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 sm:text-sm"
+              className={`block w-full pl-10 pr-3 py-2 border ${errors.password ? 'border-red-500' : 'border-gray-300'} rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 sm:text-sm`}
               required
             />
+            {errors.password && <p className="mt-1 text-xs text-red-500">{errors.password}</p>}
           </div>
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -138,9 +165,10 @@ export default function RegisterDialog({ isOpen, onClose, setMsg }) {
               placeholder="Confirm Password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 sm:text-sm"
+              className={`block w-full pl-10 pr-3 py-2 border ${errors.confirmPassword ? 'border-red-500' : 'border-gray-300'} rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 sm:text-sm`}
               required
             />
+            {errors.confirmPassword && <p className="mt-1 text-xs text-red-500">{errors.confirmPassword}</p>}
           </div>
           <button
             type="submit"

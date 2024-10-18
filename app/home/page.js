@@ -16,12 +16,13 @@ import {
   FaUser,
   FaStar,
   FaStarHalfAlt,
-  FaRegStar
+  FaRegStar,
+  FaTimes,
 } from "react-icons/fa";
-import AddRecipe from '../../components/AddRecipe';
-import RecipeDetails from '../../components/RecipeDetails';
-import UserProfileModal from '../../components/UserProfileModal';
-import loginBg from '../../assets/images/loginbg.jpeg';
+import AddRecipe from "../../components/AddRecipe";
+import RecipeDetails from "../../components/RecipeDetails";
+import UserProfileModal from "../../components/UserProfileModal";
+import loginBg from "../../assets/images/loginbg.jpeg";
 
 const StarRating = ({ rating }) => {
   return (
@@ -32,7 +33,7 @@ const StarRating = ({ rating }) => {
           <FaStar
             key={index}
             className={`w-4 h-4 ${
-              starValue <= rating ? 'text-yellow-400' : 'text-gray-600'
+              starValue <= rating ? "text-yellow-400" : "text-gray-600"
             }`}
           />
         );
@@ -169,7 +170,11 @@ export default function HomePage() {
       const fullname = recipe.fullname.toLowerCase();
       const recipeName = recipe.recipe_name.toLowerCase();
       const searchLower = query.toLowerCase();
-      return username.includes(searchLower) || fullname.includes(searchLower) || recipeName.includes(searchLower);
+      return (
+        username.includes(searchLower) ||
+        fullname.includes(searchLower) ||
+        recipeName.includes(searchLower)
+      );
     });
     setDisplayedRecipes(filtered);
   };
@@ -195,7 +200,9 @@ export default function HomePage() {
   };
 
   const refreshRecipes = async () => {
-    const response = await fetch('http://localhost/recipeshare-app-1/api/accfuntionality.php?operation=getAllRecipes');
+    const response = await fetch(
+      "http://localhost/recipeshare-app-1/api/accfuntionality.php?operation=getAllRecipes"
+    );
     const data = await response.json();
     setAllRecipes(data);
     setFilteredRecipes(data);
@@ -218,7 +225,7 @@ export default function HomePage() {
     const averageRating = parseFloat(recipe.average_rating) || 0;
 
     return (
-      <div 
+      <div
         className="bg-black bg-opacity-80 rounded-lg shadow-md overflow-hidden cursor-pointer border border-gray-700"
         onClick={() => setSelectedRecipe(recipe)}
       >
@@ -235,7 +242,9 @@ export default function HomePage() {
           </div>
         </div>
         <div className="p-4">
-          <h3 className="font-bold text-lg mb-2 text-white">{recipe.recipe_name}</h3>
+          <h3 className="font-bold text-lg mb-2 text-white">
+            {recipe.recipe_name}
+          </h3>
           <div className="flex items-center">
             <StarRating rating={averageRating} />
             <span className="ml-2 text-sm text-gray-300">
@@ -257,7 +266,7 @@ export default function HomePage() {
                 <FaUser className="text-gray-300" />
               </div>
             )}
-            <span 
+            <span
               className="text-base font-semibold text-white hover:underline"
               onClick={(e) => {
                 e.stopPropagation();
@@ -265,7 +274,7 @@ export default function HomePage() {
                   user_id: recipe.user_id,
                   fullname: recipe.fullname,
                   username: recipe.username,
-                  profile_image: recipe.profile_image
+                  profile_image: recipe.profile_image,
                 });
               }}
             >
@@ -293,13 +302,17 @@ export default function HomePage() {
     }
   };
 
+  const handleEditRecipe = () => {
+    fetchAllRecipes();
+  };
+
   return (
     <div className="min-h-screen relative font-sans">
       <Image
         src={loginBg}
         alt="Background"
         fill
-        style={{ objectFit: 'cover' }}
+        style={{ objectFit: "cover" }}
         quality={100}
         priority
       />
@@ -307,30 +320,48 @@ export default function HomePage() {
       {/* Content Wrapper */}
       <div className="relative z-20 flex min-h-screen text-white">
         {/* Sidebar */}
-        <aside className={`bg-black bg-opacity-80 w-64 min-h-screen p-4 fixed left-0 top-0 bottom-0 shadow-md z-30 transition-transform duration-300 ease-in-out ${
-          isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
-        }`}>
+        <aside
+          className={`bg-black bg-opacity-80 w-64 min-h-screen p-4 fixed left-0 top-0 bottom-0 shadow-md z-30 transition-transform duration-300 ease-in-out ${
+            isSidebarOpen ? "translate-x-0" : "-translate-x-full"
+          }`}
+        >
           <div className="mb-8">
             <h1 className="text-2xl font-pacifico text-white">RecipeShare</h1>
           </div>
           <nav className="space-y-2">
-            <Link href="/" className="flex items-center py-2 px-4 rounded text-white hover:bg-gray-800">
+            <Link
+              href="/"
+              className="flex items-center py-2 px-4 rounded text-white hover:bg-gray-800"
+            >
               <FaHome className="mr-2" /> Home
             </Link>
-            <Link href="/settings" className="flex items-center py-2 px-4 rounded text-white hover:bg-gray-800">
+            <Link
+              href="/settings"
+              className="flex items-center py-2 px-4 rounded text-white hover:bg-gray-800"
+            >
               <FaCog className="mr-2" /> Settings
             </Link>
-            <Link href="/help" className="flex items-center py-2 px-4 rounded text-white hover:bg-gray-800">
+            <Link
+              href="/help"
+              className="flex items-center py-2 px-4 rounded text-white hover:bg-gray-800"
+            >
               <FaQuestionCircle className="mr-2" /> Help & Feedback
             </Link>
-            <button onClick={handleLogout} className="flex items-center py-2 px-4 rounded text-white hover:bg-gray-800 w-full text-left">
+            <button
+              onClick={handleLogout}
+              className="flex items-center py-2 px-4 rounded text-white hover:bg-gray-800 w-full text-left"
+            >
               <FaSignOutAlt className="mr-2" /> Logout
             </button>
           </nav>
         </aside>
 
         {/* Main Content */}
-        <div className={`flex-1 transition-all duration-300 ease-in-out ${isSidebarOpen ? 'ml-64' : 'ml-0'}`}>
+        <div
+          className={`flex-1 transition-all duration-300 ease-in-out ${
+            isSidebarOpen ? "ml-64" : "ml-0"
+          }`}
+        >
           {/* Header */}
           <header className="bg-black bg-opacity-50 text-white p-4 sticky top-0 z-30 flex justify-between items-center">
             <div className="flex items-center">
@@ -355,7 +386,9 @@ export default function HomePage() {
               </div>
               <div className="relative" ref={dropdownRef}>
                 <button
-                  onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
+                  onClick={() =>
+                    setIsProfileDropdownOpen(!isProfileDropdownOpen)
+                  }
                   className="flex items-center focus:outline-none"
                 >
                   {profileImageUrl ? (
@@ -380,19 +413,25 @@ export default function HomePage() {
                 {isProfileDropdownOpen && (
                   <div className="absolute right-0 mt-2 w-48 bg-black bg-opacity-80 rounded-md shadow-lg overflow-hidden z-20">
                     <div className="p-3 border-b border-gray-700">
-                      <p className="font-bold text-white">{fullname || "User"}</p>
-                      <p className="text-sm text-gray-300">{username || "username"}</p>
+                      <p className="font-bold text-white">
+                        {fullname || "User"}
+                      </p>
+                      <p className="text-sm text-gray-300">
+                        {username || "username"}
+                      </p>
                     </div>
                     <div className="p-3">
-                      <p className="text-sm text-gray-300 mb-2">Followers: {followerCount}</p>
-                      <button 
+                      <p className="text-sm text-gray-300 mb-2">
+                        Followers: {followerCount}
+                      </p>
+                      <button
                         className="w-full bg-gray-700 text-white py-2 rounded-md text-sm hover:bg-gray-600 transition-colors duration-300"
                         onClick={() => {
                           setSelectedUser({
                             user_id: userId,
                             fullname: fullname,
                             username: username,
-                            profile_image: profileImageUrl
+                            profile_image: profileImageUrl,
                           });
                           setIsProfileDropdownOpen(false);
                         }}
@@ -411,13 +450,21 @@ export default function HomePage() {
             <div className="max-w-6xl mx-auto">
               <div className="flex mb-6">
                 <button
-                  className={`mr-4 px-4 py-2 rounded ${activeTab === "all" ? "bg-white text-black" : "bg-black bg-opacity-50 text-white"}`}
+                  className={`mr-4 px-4 py-2 rounded ${
+                    activeTab === "all"
+                      ? "bg-white text-black"
+                      : "bg-black bg-opacity-50 text-white"
+                  }`}
                   onClick={() => handleTabChange("all")}
                 >
                   All Recipes
                 </button>
                 <button
-                  className={`px-4 py-2 rounded ${activeTab === "following" ? "bg-white text-black" : "bg-black bg-opacity-50 text-white"}`}
+                  className={`px-4 py-2 rounded ${
+                    activeTab === "following"
+                      ? "bg-white text-black"
+                      : "bg-black bg-opacity-50 text-white"
+                  }`}
                   onClick={() => handleTabChange("following")}
                 >
                   Following
@@ -442,24 +489,25 @@ export default function HomePage() {
 
         {/* Add Recipe Modal */}
         {isAddRecipeModalOpen && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-               onClick={() => setIsAddRecipeModalOpen(false)}>
-            <div className="bg-white rounded-lg p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-black bg-opacity-80 rounded-lg p-8 max-w-4xl w-full max-h-[90vh] overflow-y-auto text-white">
               <div className="flex justify-between items-center mb-4">
-                <h2 className="text-2xl font-bold text-[#FF6B6B]">Add New Recipe</h2>
+                <h2 className="text-2xl font-bold text-white">Add New Recipe</h2>
                 <button
                   onClick={() => setIsAddRecipeModalOpen(false)}
-                  className="text-gray-500 hover:text-gray-700"
+                  className="text-gray-300 hover:text-white"
                 >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
-                  </svg>
+                  <FaTimes />
                 </button>
               </div>
-              <AddRecipe userId={userId} onSuccess={() => {
-                setIsAddRecipeModalOpen(false);
-                refreshRecipes();
-              }} />
+              <AddRecipe
+                userId={userId}
+                onSuccess={() => {
+                  setIsAddRecipeModalOpen(false);
+                  refreshRecipes();
+                }}
+                onCancel={() => setIsAddRecipeModalOpen(false)}
+              />
             </div>
           </div>
         )}
@@ -471,27 +519,46 @@ export default function HomePage() {
             currentUserId={userId}
             onClose={() => setSelectedUser(null)}
             setSelectedRecipe={setSelectedRecipe}
+            onEditRecipe={handleEditRecipe}
           />
         )}
 
         {/* Recipe Details Modal */}
         {selectedRecipe && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-               onClick={() => setSelectedRecipe(null)}>
-            <div className="bg-black bg-opacity-80 rounded-lg p-8 max-w-4xl w-full max-h-[90vh] overflow-y-auto text-white" onClick={e => e.stopPropagation()}>
+          <div
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+            onClick={() => setSelectedRecipe(null)}
+          >
+            <div
+              className="bg-black bg-opacity-80 rounded-lg p-8 max-w-4xl w-full max-h-[90vh] overflow-y-auto text-white"
+              onClick={(e) => e.stopPropagation()}
+            >
               <div className="flex justify-between items-center mb-4">
-                <h2 className="text-2xl font-bold text-white">{selectedRecipe.recipe_name}</h2>
+                <h2 className="text-2xl font-bold text-white">
+                  {selectedRecipe.recipe_name}
+                </h2>
                 <button
                   onClick={() => setSelectedRecipe(null)}
                   className="text-gray-300 hover:text-white"
                 >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
+                  <svg
+                    className="w-6 h-6"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M6 18L18 6M6 6l12 12"
+                    ></path>
                   </svg>
                 </button>
               </div>
-              <RecipeDetails 
-                recipe={selectedRecipe} 
+              <RecipeDetails
+                recipe={selectedRecipe}
                 currentUserId={userId}
                 onClose={() => setSelectedRecipe(null)}
                 onUpdate={() => {
